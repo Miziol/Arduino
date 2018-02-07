@@ -1,6 +1,9 @@
 #include <TM1637Display.h>
 #include <Wire.h>
 
+#include "i2c.h"
+#include "i2c_BMP280.h"
+
 /*
  Connection list
  Arduino <--> RTC DS3231 (sign on my board)
@@ -12,13 +15,21 @@
  Arduino <--> TM1637
  3       <--> DIO
  2       <--> CLK
- 5V      <--> Vcc
+ 5V      <--> Vcc //3V-5V
  GND     <--> GND
+
+ Arduino <--> BMP280
+ SDA     <--> SDA
+ SCL     <--> SCL
+ 3.3V    <--> Vcc //3V-5V
+ GND     <--> GND 
  */
 
 
 //Data
 uint8_t hours, minutes, seconds;
+float temperature, preasure;
+
 
 //Display
 #define CLK 2
@@ -26,13 +37,16 @@ uint8_t hours, minutes, seconds;
 
 TM1637Display display(CLK, DIO);
 
+//BMP280
+BMP280 bmp280;
+
 //Setup of elements
 void setup()
 {
-  //Serial.begin(9600);
+  Serial.begin(9600);
   
   //Display
-  display.setBrightness(0x01);
+  display.setBrightness(0x00);
 
   //RTC
   Wire.begin();
@@ -40,6 +54,11 @@ void setup()
   Wire.write(0x0E);
   Wire.write(0b00011100);
   Wire.endTransmission();
+
+  //BMP 280
+  bmp280.initialize();
+  bmp280.setEnabled(0);
+  bmp280.triggerMeasurement();
 }
 
 //Operating system
@@ -67,11 +86,33 @@ void loop()
 
   }
 
+//reading data from BMP 280
+bmp280.awaitMeasurement();
+bmp280.getTemperature(temperature);
+bmp280.getPressure(preasure);
+bmp280.triggerMeasurement();
+
+
+  
+
 //sending data on dispaly with dots turn on/off 1 per second
   data[0] = hours/10 == 0 ? 0x00 : display.encodeDigit(hours/10);
   data[1] = display.encodeDigit(hours % 10) + ( seconds << 7 );
   data[2] = display.encodeDigit(minutes / 10);
   data[3] = display.encodeDigit(minutes % 10);
   display.setSegments(data);
+  delay(2000);
+
+
+Serial.println(temperature);
+
+//sending data on display (temperature)
+  data[0] = 0x00;
+  data[1] = display.encodeDigit( (int) temperature / 10);
+  data[2] = display.encodeDigit( (int) temperature % 10);
+  data[3] = 0x00;
+  display.setSegments(data);
   delay(1000);
+
+  
 }
