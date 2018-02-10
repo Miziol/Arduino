@@ -28,7 +28,7 @@
 
 //Data
 uint8_t hours, minutes, seconds;
-float temperature, preasure;
+float temperature = 0, preasure = 0;
 
 
 //Display
@@ -39,6 +39,29 @@ TM1637Display display(CLK, DIO);
 
 //BMP280
 BMP280 bmp280;
+
+//FUNCTION
+void showTempAndPres()
+{
+  uint8_t data[4];
+
+  data[0] = display.encodeDigit( (int) temperature / 10 );
+  data[1] = display.encodeDigit( (int) temperature % 10);
+  data[2] = 0x00;
+  data[3] = display.encodeDigit( (int) (temperature * 10.00) % 10);
+  display.setSegments(data);
+  delay(2000);
+
+  data[0] = display.encodeDigit( (int) preasure / 1000);
+  data[1] = display.encodeDigit( (int) (preasure / 100) % 10);
+  data[2] = display.encodeDigit( (int) (preasure / 10) % 10);
+  data[3] = display.encodeDigit( (int) preasure % 10);
+  display.setSegments(data);
+  delay(2000);
+}
+
+
+
 
 //Setup of elements
 void setup()
@@ -68,7 +91,7 @@ void loop()
   uint8_t data[4];
 
 //reading data form RTC
-  Wire.beginTransmission(0x68); //It's an address od RTC DS3231
+  Wire.beginTransmission(0x68); //It's an address of RTC DS3231
   Wire.write(0);
   Wire.endTransmission();
   Wire.requestFrom(0x68, 3);
@@ -87,13 +110,13 @@ void loop()
   }
 
 //reading data from BMP 280
-bmp280.awaitMeasurement();
-bmp280.getTemperature(temperature);
-bmp280.getPressure(preasure);
-bmp280.triggerMeasurement();
+  bmp280.awaitMeasurement();
+  bmp280.getTemperature(temperature);
+  bmp280.getPressure(preasure);
+  bmp280.triggerMeasurement();
 
-
-  
+Serial.print(hours); Serial.print(":"); Serial.print(minutes); Serial.print(":"); Serial.println(seconds);
+Serial.print("t: "); Serial.print(temperature); Serial.print(" p: "); Serial.println(preasure);
 
 //sending data on dispaly with dots turn on/off 1 per second
   data[0] = hours/10 == 0 ? 0x00 : display.encodeDigit(hours/10);
@@ -101,18 +124,10 @@ bmp280.triggerMeasurement();
   data[2] = display.encodeDigit(minutes / 10);
   data[3] = display.encodeDigit(minutes % 10);
   display.setSegments(data);
-  delay(2000);
+  delay(100);
 
-
-Serial.println(temperature);
-
-//sending data on display (temperature)
-  data[0] = 0x00;
-  data[1] = display.encodeDigit( (int) temperature / 10);
-  data[2] = display.encodeDigit( (int) temperature % 10);
-  data[3] = 0x00;
-  display.setSegments(data);
-  delay(1000);
-
-  
+  if(preasure < 1000000.00)
+  {
+    showTempAndPres();
+  }
 }
