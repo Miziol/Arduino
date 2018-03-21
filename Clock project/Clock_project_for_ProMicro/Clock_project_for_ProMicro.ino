@@ -168,7 +168,5 @@ Serial.print("t: "); Serial.print(temperature); Serial.print(" p: "); Serial.pri
   delay(100);
 
   if(digitalRead(10) == LOW)
-  
     showTempAndPres();
-    
 }
