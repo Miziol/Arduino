@@ -1,3 +1,5 @@
+#include <HID.h>
+
 #include <TM1637Display.h>
 #include <Wire.h>
 
