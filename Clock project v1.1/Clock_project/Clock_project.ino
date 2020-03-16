@@ -143,7 +143,7 @@ void loop()
     minutes = Wire.read();
     hours = Wire.read();
 
-    //conversion of data (for more look to spec od RTC)
+    //conversion of data (for more look to spec of RTC)
     seconds = (((seconds & 0b11110000) >> 4) * 10 + (seconds & 0b00001111));
     minutes = (((minutes & 0b11110000) >> 4) * 10 + (minutes & 0b00001111));
     hours = (((hours & 0b00100000) >> 5) * 20 + ((hours & 0b00010000) >> 4) * 10 + (hours & 0b00001111));
